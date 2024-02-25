@@ -515,11 +515,13 @@ void Voxelizer::moveUvBufferIntoVoxels(const VisualTriangle &inputTriangle) noex
     for (auto &[index, weightedUv] : uvBuffer) {
         Vec3u32 pos = uvBuffer.posOf(index);
         Vec3f colorVec = inputTriangle.colorAt_f(weightedUv.value);
-        WeightedColor color = {weightedUv.weight, colorVec};
-
-        auto [location, success] = voxels_.emplace(pos, color);
-        if (not success) {
-            location->second = this->combineFunction(color, location->second);
+        // Solve transparency issues
+        if (colorVec[0] >= 0 && colorVec[1] >= 0 && colorVec[2] >= 0) {
+            WeightedColor color = {weightedUv.weight, colorVec};
+            auto [location, success] = voxels_.emplace(pos, color);
+            if (not success) {
+                location->second = this->combineFunction(color, location->second);
+            }
         }
     }
     uvBuffer.clear();

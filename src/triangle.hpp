@@ -164,6 +164,16 @@ struct obj2voxel_texture {
         // TODO move uv transformation on y-axis here instead of doing it in VisualTriangle
         return image->getPixel(uv).vecf();
     }
+
+    /// Returns the color at the given uv coordinates as a vector.
+    voxelio::Vec3f get_transparent(voxelio::Vec2f uv) const
+    {
+        VXIO_DEBUG_ASSERT(image.has_value());
+        // TODO move uv transformation on y-axis here instead of doing it in VisualTriangle
+        obj2voxel::Color32 color = image->getPixel(uv);
+        if (color.isTransparent()) return {-256, -256, -256};  // Solve transparency issues
+        return color.vecf();
+    }
 };
 
 /// A textured triangle that also has material information.
@@ -187,7 +197,7 @@ struct obj2voxel_triangle : public obj2voxel::TexturedTriangle {
         case obj2voxel::TriangleType::UNTEXTURED: return color;
         case obj2voxel::TriangleType::TEXTURED: {
             VXIO_DEBUG_ASSERT_NOTNULL(texture);
-            return texture->get({uv.x(), 1 - uv.y()});
+            return texture->get_transparent({uv.x(), 1 - uv.y()});
         }
         }
         VXIO_DEBUG_ASSERT_UNREACHABLE();
